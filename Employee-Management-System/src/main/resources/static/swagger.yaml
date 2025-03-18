@@ -4,7 +4,7 @@ info:
   description: This API exposes endpoints to manage employee records.
   version: 1.0.0
 servers:
-  - url: http://localhost:8080/
+  - url: https://employee-records-management.onrender.com/
 paths:
   /api/employees:
     get:
@@ -31,9 +31,9 @@ paths:
           in: query
           schema:
             type: string
-            example: 'id,asc'
+            example: "id,asc"
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -50,19 +50,18 @@ paths:
                     age: 30
                     email: johndoe@example.com
                     salary: 50000
-                    createdAt: '2025-03-18 17:54:29'
-                    updatedAt: '2025-03-18 17:54:29'
+                    createdAt: "2025-03-18 17:54:29"
+                    updatedAt: "2025-03-18 17:54:29"
                   - id: 2
                     name: Jane Smith
                     department: Marketing
                     age: 28
                     email: janesmith@example.com
                     salary: 55000
-                    createdAt: '2025-03-18 17:54:29'
-                    updatedAt: '2025-03-18 17:54:29'
+                    createdAt: "2025-03-18 17:54:29"
+                    updatedAt: "2025-03-18 17:54:29"
 
-
-        '400':
+        "400":
           description: Bad Request
           content:
             application/json:
@@ -74,7 +73,7 @@ paths:
                 message: >-
                   Bad Request. Invalid sort format. Use 'field,asc' or
                   'field,desc'
-        '500':
+        "500":
           description: Internal Server Error
           content:
             application/json:
@@ -83,7 +82,7 @@ paths:
               example:
                 success: false
                 status: 500
-                message: 'An error occurred: Internal Server Error'
+                message: "An error occurred: Internal Server Error"
     post:
       tags:
         - Employee Management System
@@ -103,7 +102,7 @@ paths:
                 email: leo@example.com
                 salary: 40000
       responses:
-        '201':
+        "201":
           description: Created
           content:
             application/json:
@@ -120,9 +119,9 @@ paths:
                   age: 22
                   email: leo@example.com
                   salary: 40000
-                  createdAt: '2025-03-18 18:08:22'
-                  updatedAt: '2025-03-18 18:08:22'
-        '400':
+                  createdAt: "2025-03-18 18:08:22"
+                  updatedAt: "2025-03-18 18:08:22"
+        "400":
           description: Bad Request
           content:
             application/json:
@@ -132,7 +131,7 @@ paths:
                 success: false
                 status: 400
                 message: Bad Request. Department is required
-        '500':
+        "500":
           description: Internal Server Error
           content:
             application/json:
@@ -141,7 +140,7 @@ paths:
               example:
                 success: false
                 status: 500
-                message: 'An error occurred: Internal Server Error'
+                message: "An error occurred: Internal Server Error"
 
   /api/employees/{id}:
     get:
@@ -160,7 +159,7 @@ paths:
             type: integer
             example: 1
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -177,9 +176,9 @@ paths:
                   age: 30
                   email: johndoe@example.com
                   salary: 50000
-                  createdAt: '2025-03-18 17:54:29'
-                  updatedAt: '2025-03-18 17:54:29'
-        '404':
+                  createdAt: "2025-03-18 17:54:29"
+                  updatedAt: "2025-03-18 17:54:29"
+        "404":
           description: Not Found
           content:
             application/json:
@@ -188,8 +187,8 @@ paths:
               example:
                 success: false
                 status: 404
-                message: 'No Employee with id: 11'
-        '500':
+                message: "No Employee with id: 11"
+        "500":
           description: Internal Server Error
           content:
             application/json:
@@ -198,7 +197,7 @@ paths:
               example:
                 success: false
                 status: 500
-                message: 'An error occurred: Internal Server Error'
+                message: "An error occurred: Internal Server Error"
     delete:
       tags:
         - Employee Management System
@@ -215,7 +214,7 @@ paths:
             type: integer
             example: 1
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -225,7 +224,7 @@ paths:
                 success: true
                 status: 200
                 message: Successful Request
-        '404':
+        "404":
           description: Not Found
           content:
             application/json:
@@ -235,7 +234,7 @@ paths:
                 success: false
                 status: 404
                 message: Not able to delete employee data.  No Employee with id 1 found
-        '500':
+        "500":
           description: Internal Server Error
           content:
             application/json:
@@ -244,7 +243,7 @@ paths:
               example:
                 success: false
                 status: 500
-                message: 'An error occurred: Internal Server Error'
+                message: "An error occurred: Internal Server Error"
     put:
       tags:
         - Employee Management System
@@ -272,7 +271,7 @@ paths:
                 email: johndoe@example.com
                 salary: 50000
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -289,9 +288,9 @@ paths:
                   age: 26
                   email: johndoe@example.com
                   salary: 50000
-                  createdAt: '2025-03-18 18:05:29'
-                  updatedAt: '2025-03-18 18:13:04'
-        '400':
+                  createdAt: "2025-03-18 18:05:29"
+                  updatedAt: "2025-03-18 18:13:04"
+        "400":
           description: Bad Request
           content:
             application/json:
@@ -301,7 +300,7 @@ paths:
                 success: false
                 status: 400
                 message: Bad Request. Age must be at least 18
-        '404':
+        "404":
           description: Not Found
           content:
             application/json:
@@ -313,7 +312,7 @@ paths:
                 message: >-
                   Not able to update employee data.  No Employee with id 21
                   found
-        '500':
+        "500":
           description: Internal Server Error
           content:
             application/json:
@@ -322,7 +321,7 @@ paths:
               example:
                 success: false
                 status: 500
-                message: 'An error occurred: Internal Server Error'
+                message: "An error occurred: Internal Server Error"
   /api/employees/search:
     get:
       tags:
@@ -338,7 +337,7 @@ paths:
             type: string
             example: john
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -355,17 +354,17 @@ paths:
                     age: 35
                     email: alicej@example.com
                     salary: 70000
-                    createdAt: '2025-03-18 18:05:29'
-                    updatedAt: '2025-03-18 18:05:29'
+                    createdAt: "2025-03-18 18:05:29"
+                    updatedAt: "2025-03-18 18:05:29"
                   - id: 7
                     name: Johnson
                     department: HR
                     age: 30
                     email: johnson@example.com
                     salary: 50000
-                    createdAt: '2025-03-18 18:05:29'
-                    updatedAt: '2025-03-18 18:05:29'
-        '500':
+                    createdAt: "2025-03-18 18:05:29"
+                    updatedAt: "2025-03-18 18:05:29"
+        "500":
           description: Internal Server Error
           content:
             application/json:
@@ -374,4 +373,4 @@ paths:
               example:
                 success: false
                 status: 500
-                message: 'An error occurred: Internal Server Error'
+                message: "An error occurred: Internal Server Error"
