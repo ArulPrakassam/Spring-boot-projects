@@ -1,0 +1,377 @@
+openapi: 3.0.0
+info:
+  title: Employee Management System
+  description: This API exposes endpoints to manage employee records.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080/
+paths:
+  /api/employees:
+    get:
+      tags:
+        - Employee Management System
+      summary: Get All Employee Records
+      description: >-
+        Fetch employee records.  Optional fields for pagination - page, size.
+        Example - page=0&size=5. Optional field for sorting - sort. Example -
+        sort=name,asc, sort=age,desc. Other values for sorting (fields - id,
+        name, department, age, salary. sorting order - asc, desc).
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            example: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            example: 10
+        - name: sort
+          in: query
+          schema:
+            type: string
+            example: 'id,asc'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                success: true
+                status: 200
+                message: Successful Request
+                data:
+                  - id: 1
+                    name: John Doe
+                    department: Sales
+                    age: 30
+                    email: johndoe@example.com
+                    salary: 50000
+                    createdAt: '2025-03-18 17:54:29'
+                    updatedAt: '2025-03-18 17:54:29'
+                  - id: 2
+                    name: Jane Smith
+                    department: Marketing
+                    age: 28
+                    email: janesmith@example.com
+                    salary: 55000
+                    createdAt: '2025-03-18 17:54:29'
+                    updatedAt: '2025-03-18 17:54:29'
+
+
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                success: false
+                status: 400
+                message: >-
+                  Bad Request. Invalid sort format. Use 'field,asc' or
+                  'field,desc'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                success: false
+                status: 500
+                message: 'An error occurred: Internal Server Error'
+    post:
+      tags:
+        - Employee Management System
+      summary: Add new Employee Record
+      description: >-
+        Add new employee record. Required fields are name, department, age,
+        salary.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                name: Leodas
+                department: cyber
+                age: 22
+                email: leo@example.com
+                salary: 40000
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                success: true
+                status: 200
+                message: Employee added successfully
+                data:
+                  id: 12
+                  name: Leodas
+                  department: cyber
+                  age: 22
+                  email: leo@example.com
+                  salary: 40000
+                  createdAt: '2025-03-18 18:08:22'
+                  updatedAt: '2025-03-18 18:08:22'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                success: false
+                status: 400
+                message: Bad Request. Department is required
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                success: false
+                status: 500
+                message: 'An error occurred: Internal Server Error'
+
+  /api/employees/{id}:
+    get:
+      tags:
+        - Employee Management System
+      summary: Get Employee Record By id
+      description: >-
+        Fetch an employee record based on the given id in url param. No
+        additional fields required.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the employee
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                success: true
+                status: 200
+                message: Successful Request
+                data:
+                  id: 1
+                  name: John Doe
+                  department: Sales
+                  age: 30
+                  email: johndoe@example.com
+                  salary: 50000
+                  createdAt: '2025-03-18 17:54:29'
+                  updatedAt: '2025-03-18 17:54:29'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                success: false
+                status: 404
+                message: 'No Employee with id: 11'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                success: false
+                status: 500
+                message: 'An error occurred: Internal Server Error'
+    delete:
+      tags:
+        - Employee Management System
+      summary: Delete Employee Record
+      description: >-
+        Delete an employee record based on the given id in url param. No
+        additional fields required.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the employee
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                success: true
+                status: 200
+                message: Successful Request
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                success: false
+                status: 404
+                message: Not able to delete employee data.  No Employee with id 1 found
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                success: false
+                status: 500
+                message: 'An error occurred: Internal Server Error'
+    put:
+      tags:
+        - Employee Management System
+      summary: Update Employee Record
+      description: >-
+        Update an employee record based on the given id in url param. Required
+        fields are name, department, age, salary.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the employee
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                name: John Doe
+                department: Sales
+                age: 26
+                email: johndoe@example.com
+                salary: 50000
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                success: true
+                status: 200
+                message: Employee updated successfully
+                data:
+                  id: 1
+                  name: John Doe
+                  department: Sales
+                  age: 26
+                  email: johndoe@example.com
+                  salary: 50000
+                  createdAt: '2025-03-18 18:05:29'
+                  updatedAt: '2025-03-18 18:13:04'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                success: false
+                status: 400
+                message: Bad Request. Age must be at least 18
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                success: false
+                status: 404
+                message: >-
+                  Not able to update employee data.  No Employee with id 21
+                  found
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                success: false
+                status: 500
+                message: 'An error occurred: Internal Server Error'
+  /api/employees/search:
+    get:
+      tags:
+        - Employee Management System
+      summary: Search Employee Record
+      description: >-
+        Search an employee record based on the given search term in url param.
+        Search by employee name or department. Example - query=sales, query=john
+      parameters:
+        - name: query
+          in: query
+          schema:
+            type: string
+            example: john
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                success: true
+                status: 200
+                message: Successful Request
+                data:
+                  - id: 3
+                    name: Alice Johnson
+                    department: Development
+                    age: 35
+                    email: alicej@example.com
+                    salary: 70000
+                    createdAt: '2025-03-18 18:05:29'
+                    updatedAt: '2025-03-18 18:05:29'
+                  - id: 7
+                    name: Johnson
+                    department: HR
+                    age: 30
+                    email: johnson@example.com
+                    salary: 50000
+                    createdAt: '2025-03-18 18:05:29'
+                    updatedAt: '2025-03-18 18:05:29'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                success: false
+                status: 500
+                message: 'An error occurred: Internal Server Error'
