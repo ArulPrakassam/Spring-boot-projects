@@ -1,7 +1,10 @@
-openapi: 3.0.0
+openapi: 3.0.3
 info:
-  title: Employee Management System
-  description: This API exposes endpoints to manage employee records.
+  title: Employee Records Management System
+  description: |
+    This API exposes endpoints to manage employee records.
+
+    [Developed by Arul Prakassam](https://github.com/ArulPrakassam)
   version: 1.0.0
 servers:
   - url: https://employee-records-management.onrender.com/
@@ -9,11 +12,14 @@ paths:
   /api/employees:
     get:
       tags:
-        - Employee Management System
+        - Employee Records Management System
       summary: Get All Employee Records
-      description: >-
-        Fetch employee records.  Optional fields for pagination - page, size.
-        Example - page=0&size=5. Optional field for sorting - sort. Example -
+      description: |
+        Fetch employee records.
+
+        Optional fields for pagination - page, size.  Example - page=0&size=5. 
+
+        Optional field for sorting - sort. Example -
         sort=name,asc, sort=age,desc. Other values for sorting (fields - id,
         name, department, age, salary. sorting order - asc, desc).
       parameters:
@@ -71,8 +77,7 @@ paths:
                 success: false
                 status: 400
                 message: >-
-                  Bad Request. Invalid sort format. Use 'field,asc' or
-                  'field,desc'
+                  Bad Request. {errorMessage}
         "500":
           description: Internal Server Error
           content:
@@ -85,7 +90,7 @@ paths:
                 message: "An error occurred: Internal Server Error"
     post:
       tags:
-        - Employee Management System
+        - Employee Records Management System
       summary: Add new Employee Record
       description: >-
         Add new employee record. Required fields are name, department, age,
@@ -130,7 +135,7 @@ paths:
               example:
                 success: false
                 status: 400
-                message: Bad Request. Department is required
+                message: Bad Request. {errorMessage}
         "500":
           description: Internal Server Error
           content:
@@ -145,7 +150,7 @@ paths:
   /api/employees/{id}:
     get:
       tags:
-        - Employee Management System
+        - Employee Records Management System
       summary: Get Employee Record By id
       description: >-
         Fetch an employee record based on the given id in url param. No
@@ -187,7 +192,7 @@ paths:
               example:
                 success: false
                 status: 404
-                message: "No Employee with id: 11"
+                message: "No Employee with id: {id}"
         "500":
           description: Internal Server Error
           content:
@@ -200,7 +205,7 @@ paths:
                 message: "An error occurred: Internal Server Error"
     delete:
       tags:
-        - Employee Management System
+        - Employee Records Management System
       summary: Delete Employee Record
       description: >-
         Delete an employee record based on the given id in url param. No
@@ -233,7 +238,7 @@ paths:
               example:
                 success: false
                 status: 404
-                message: Not able to delete employee data.  No Employee with id 1 found
+                message: Not able to delete employee data.  No Employee with id {id} found
         "500":
           description: Internal Server Error
           content:
@@ -246,7 +251,7 @@ paths:
                 message: "An error occurred: Internal Server Error"
     put:
       tags:
-        - Employee Management System
+        - Employee Records Management System
       summary: Update Employee Record
       description: >-
         Update an employee record based on the given id in url param. Required
@@ -299,7 +304,7 @@ paths:
               example:
                 success: false
                 status: 400
-                message: Bad Request. Age must be at least 18
+                message: Bad Request. {errorMessage}
         "404":
           description: Not Found
           content:
@@ -310,7 +315,7 @@ paths:
                 success: false
                 status: 404
                 message: >-
-                  Not able to update employee data.  No Employee with id 21
+                  Not able to update employee data.  No Employee with id {id}
                   found
         "500":
           description: Internal Server Error
@@ -325,7 +330,7 @@ paths:
   /api/employees/search:
     get:
       tags:
-        - Employee Management System
+        - Employee Records Management System
       summary: Search Employee Record
       description: >-
         Search an employee record based on the given search term in url param.
