@@ -2,12 +2,20 @@ openapi: 3.0.3
 info:
   title: Employee Records Management System
   description: |
-    This API exposes endpoints to manage employee records.
+    This API exposes endpoints to manage employee records. All routes are protected by JWT token.
 
     [Developed by Arul Prakassam](https://github.com/ArulPrakassam)
   version: 1.0.0
 servers:
   - url: https://employee-records-management.onrender.com/
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+tags:
+  - name: Auth
+  - name: Employee Records Management System
 paths:
   /api/employees:
     get:
@@ -22,6 +30,8 @@ paths:
         Optional field for sorting - sort. Example -
         sort=name,asc, sort=age,desc. Other values for sorting (fields - id,
         name, department, age, salary. sorting order - asc, desc).
+      security:
+        - bearerAuth: [ ]
       parameters:
         - name: page
           in: query
@@ -37,9 +47,9 @@ paths:
           in: query
           schema:
             type: string
-            example: "id,asc"
+            example: 'id,asc'
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
@@ -56,18 +66,18 @@ paths:
                     age: 30
                     email: johndoe@example.com
                     salary: 50000
-                    createdAt: "2025-03-18 17:54:29"
-                    updatedAt: "2025-03-18 17:54:29"
+                    createdAt: '2025-03-31 17:12:38'
+                    updatedAt: '2025-03-31 17:12:38'
                   - id: 2
                     name: Jane Smith
                     department: Marketing
                     age: 28
                     email: janesmith@example.com
                     salary: 55000
-                    createdAt: "2025-03-18 17:54:29"
-                    updatedAt: "2025-03-18 17:54:29"
+                    createdAt: '2025-03-31 17:12:38'
+                    updatedAt: '2025-03-31 17:12:38'
 
-        "400":
+        '400':
           description: Bad Request
           content:
             application/json:
@@ -77,8 +87,30 @@ paths:
                 success: false
                 status: 400
                 message: >-
-                  Bad Request. {errorMessage}
-        "500":
+                  Bad Request. Invalid sort format. Use 'field,asc' or
+                  'field,desc'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+              examples:
+                example-0:
+                  summary: 401 - Unauthorized
+                  value:
+                    success: false
+                    status: 401
+                    message: No authentication token specified in x-auth-token header
+                example-1:
+                  summary: 401 - Unauthorized
+                  value:
+                    success: false
+                    status: 401
+                    message: >-
+                      Access token is not valid or has expired, you will need to
+                      login
+        '500':
           description: Internal Server Error
           content:
             application/json:
@@ -87,7 +119,7 @@ paths:
               example:
                 success: false
                 status: 500
-                message: "An error occurred: Internal Server Error"
+                message: 'An error occurred: Internal Server Error'
     post:
       tags:
         - Employee Records Management System
@@ -101,13 +133,15 @@ paths:
             schema:
               type: object
               example:
-                name: Leodas
+                name: Leodas111
                 department: cyber
                 age: 22
-                email: leo@example.com
+                email: leo11111@example.com
                 salary: 40000
+      security:
+        - bearerAuth: [ ]
       responses:
-        "201":
+        '201':
           description: Created
           content:
             application/json:
@@ -115,18 +149,18 @@ paths:
                 type: object
               example:
                 success: true
-                status: 200
+                status: 201
                 message: Employee added successfully
                 data:
-                  id: 12
-                  name: Leodas
+                  id: 11
+                  name: Leodas111
                   department: cyber
                   age: 22
-                  email: leo@example.com
+                  email: leo11111@example.com
                   salary: 40000
-                  createdAt: "2025-03-18 18:08:22"
-                  updatedAt: "2025-03-18 18:08:22"
-        "400":
+                  createdAt: '2025-03-31 18:57:15'
+                  updatedAt: '2025-03-31 18:57:15'
+        '400':
           description: Bad Request
           content:
             application/json:
@@ -135,8 +169,39 @@ paths:
               example:
                 success: false
                 status: 400
-                message: Bad Request. {errorMessage}
-        "500":
+                message: Bad Request. Department is required
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+              examples:
+                example-0:
+                  summary: 401 - Unauthorized
+                  value:
+                    success: false
+                    status: 401
+                    message: No authentication token specified in x-auth-token header
+                example-1:
+                  summary: 401 - Unauthorized
+                  value:
+                    success: false
+                    status: 401
+                    message: >-
+                      Access token is not valid or has expired, you will need to
+                      login
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                success: false
+                status: 403
+                message: Access Denied.  Not able to perform operation.
+        '500':
           description: Internal Server Error
           content:
             application/json:
@@ -145,8 +210,7 @@ paths:
               example:
                 success: false
                 status: 500
-                message: "An error occurred: Internal Server Error"
-
+                message: 'An error occurred: Internal Server Error'
   /api/employees/{id}:
     get:
       tags:
@@ -163,8 +227,10 @@ paths:
           schema:
             type: integer
             example: 1
+      security:
+        - bearerAuth: [ ]
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
@@ -181,9 +247,30 @@ paths:
                   age: 30
                   email: johndoe@example.com
                   salary: 50000
-                  createdAt: "2025-03-18 17:54:29"
-                  updatedAt: "2025-03-18 17:54:29"
-        "404":
+                  createdAt: '2025-03-31 17:12:38'
+                  updatedAt: '2025-03-31 17:12:38'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+              examples:
+                example-0:
+                  summary: 401 - Unauthorized
+                  value:
+                    success: false
+                    status: 401
+                    message: No authentication token specified in x-auth-token header
+                example-1:
+                  summary: 401 - Unauthorized
+                  value:
+                    success: false
+                    status: 401
+                    message: >-
+                      Access token is not valid or has expired, you will need to
+                      login
+        '404':
           description: Not Found
           content:
             application/json:
@@ -192,8 +279,8 @@ paths:
               example:
                 success: false
                 status: 404
-                message: "No Employee with id: {id}"
-        "500":
+                message: 'No Employee with id: 11'
+        '500':
           description: Internal Server Error
           content:
             application/json:
@@ -202,7 +289,7 @@ paths:
               example:
                 success: false
                 status: 500
-                message: "An error occurred: Internal Server Error"
+                message: 'An error occurred: Internal Server Error'
     delete:
       tags:
         - Employee Records Management System
@@ -218,8 +305,10 @@ paths:
           schema:
             type: integer
             example: 1
+      security:
+        - bearerAuth: [ ]
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
@@ -229,7 +318,38 @@ paths:
                 success: true
                 status: 200
                 message: Successful Request
-        "404":
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+              examples:
+                example-0:
+                  summary: 401 - Unauthorized
+                  value:
+                    success: false
+                    status: 401
+                    message: No authentication token specified in x-auth-token header
+                example-1:
+                  summary: 401 - Unauthorized
+                  value:
+                    success: false
+                    status: 401
+                    message: >-
+                      Access token is not valid or has expired, you will need to
+                      login
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                success: false
+                status: 403
+                message: Access Denied.  Not able to perform operation.
+        '404':
           description: Not Found
           content:
             application/json:
@@ -238,8 +358,8 @@ paths:
               example:
                 success: false
                 status: 404
-                message: Not able to delete employee data.  No Employee with id {id} found
-        "500":
+                message: Not able to delete employee data.  No Employee with id 1 found
+        '500':
           description: Internal Server Error
           content:
             application/json:
@@ -248,7 +368,7 @@ paths:
               example:
                 success: false
                 status: 500
-                message: "An error occurred: Internal Server Error"
+                message: 'An error occurred: Internal Server Error'
     put:
       tags:
         - Employee Records Management System
@@ -272,11 +392,13 @@ paths:
               example:
                 name: John Doe
                 department: Sales
-                age: 26
+                age: 27
                 email: johndoe@example.com
                 salary: 50000
+      security:
+        - bearerAuth: [ ]
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
@@ -287,15 +409,15 @@ paths:
                 status: 200
                 message: Employee updated successfully
                 data:
-                  id: 1
+                  id: 2
                   name: John Doe
                   department: Sales
-                  age: 26
+                  age: 27
                   email: johndoe@example.com
                   salary: 50000
-                  createdAt: "2025-03-18 18:05:29"
-                  updatedAt: "2025-03-18 18:13:04"
-        "400":
+                  createdAt: '2025-03-31 17:12:38'
+                  updatedAt: '2025-03-31 19:04:30'
+        '400':
           description: Bad Request
           content:
             application/json:
@@ -304,8 +426,39 @@ paths:
               example:
                 success: false
                 status: 400
-                message: Bad Request. {errorMessage}
-        "404":
+                message: Bad Request. Age must be at least 18
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+              examples:
+                example-0:
+                  summary: 401 - Unauthorized
+                  value:
+                    success: false
+                    status: 401
+                    message: No authentication token specified in x-auth-token header
+                example-1:
+                  summary: 401 - Unauthorized
+                  value:
+                    success: false
+                    status: 401
+                    message: >-
+                      Access token is not valid or has expired, you will need to
+                      login
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                success: false
+                status: 403
+                message: Access Denied.  Not able to perform operation.
+        '404':
           description: Not Found
           content:
             application/json:
@@ -315,9 +468,9 @@ paths:
                 success: false
                 status: 404
                 message: >-
-                  Not able to update employee data.  No Employee with id {id}
+                  Not able to update employee data.  No Employee with id 21
                   found
-        "500":
+        '500':
           description: Internal Server Error
           content:
             application/json:
@@ -326,7 +479,7 @@ paths:
               example:
                 success: false
                 status: 500
-                message: "An error occurred: Internal Server Error"
+                message: 'An error occurred: Internal Server Error'
   /api/employees/search:
     get:
       tags:
@@ -335,6 +488,8 @@ paths:
       description: >-
         Search an employee record based on the given search term in url param.
         Search by employee name or department. Example - query=sales, query=john
+      security:
+        - bearerAuth: [ ]
       parameters:
         - name: query
           in: query
@@ -342,7 +497,7 @@ paths:
             type: string
             example: john
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
@@ -359,17 +514,38 @@ paths:
                     age: 35
                     email: alicej@example.com
                     salary: 70000
-                    createdAt: "2025-03-18 18:05:29"
-                    updatedAt: "2025-03-18 18:05:29"
+                    createdAt: '2025-03-31 17:12:38'
+                    updatedAt: '2025-03-31 17:12:38'
                   - id: 7
                     name: Johnson
                     department: HR
                     age: 30
                     email: johnson@example.com
                     salary: 50000
-                    createdAt: "2025-03-18 18:05:29"
-                    updatedAt: "2025-03-18 18:05:29"
-        "500":
+                    createdAt: '2025-03-31 17:12:38'
+                    updatedAt: '2025-03-31 17:12:38'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+              examples:
+                example-0:
+                  summary: 401 - Unauthorized
+                  value:
+                    success: false
+                    status: 401
+                    message: No authentication token specified in x-auth-token header
+                example-1:
+                  summary: 401 - Unauthorized
+                  value:
+                    success: false
+                    status: 401
+                    message: >-
+                      Access token is not valid or has expired, you will need to
+                      login
+        '500':
           description: Internal Server Error
           content:
             application/json:
@@ -378,4 +554,90 @@ paths:
               example:
                 success: false
                 status: 500
-                message: "An error occurred: Internal Server Error"
+                message: 'An error occurred: Internal Server Error'
+  /auth/register:
+    post:
+      tags:
+        - Auth
+      summary: Register
+      description: Register as an ADMIN or USER.  ADMIN will have full       access. USER will be able to access only GET routes.
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                name: David
+                email: david@example.com
+                password: david1
+                role: ADMIN
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                success: true
+                status: 201
+                message: User Created Successfully
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                success: false
+                status: 400
+                message: Bad Request
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Login
+      description: Login with registered credentials and get token to use protected routes.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                email: david@example.com
+                password: david1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                success: true
+                status: 200
+                message: Successful Request
+                data:
+                  token: >-
+                    eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJqYWRlQGV4YW1wbGUuY29tIiwicm9sZSI6IltST0xFX1VTRVJdIiwiaWF0IjoxNzQzNDI1NDg0LCJleHAiOjE3NDM1MTE4ODR9.d0GeaUSv79DTW23iF1w5NXP4jX31XkZak9mkWUWeKXE
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                success: false
+                status: 400
+                message: Bad Request
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                success: false
+                status: 401
+                message: Unauthorized Request. Bad credentials

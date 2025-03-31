@@ -1,6 +1,7 @@
 package com.employeemanagement.service;
 
 
+import com.employeemanagement.exceptionhandling.AccessForbiddenException;
 import com.employeemanagement.exceptionhandling.NoEmployeeException;
 import com.employeemanagement.model.Employee;
 import com.employeemanagement.repo.EmployeeRepo;
@@ -11,9 +12,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -22,8 +21,9 @@ public class EmployeeService {
     @Autowired
     private EmployeeRepo repo;
 
+
     //get all employees
-    public List<Employee> getAllEmployees(int page,int size,String sort) {
+    public List<Employee> getAllEmployees(int page, int size, String sort) {
         String[] sortParams = sort.split(",");
         String sortField = sortParams[0];
         String sortDirection = sortParams[1];
@@ -52,19 +52,25 @@ public class EmployeeService {
 
     //get single employee by id
     public Employee getEmployeeById(Long id) throws NoEmployeeException {
-        Optional<Employee> emp=repo.findById(id);
-        if(emp.isPresent()){
+        Optional<Employee> emp = repo.findById(id);
+        if (emp.isPresent()) {
             return emp.get();
-        }else{
-            throw new NoEmployeeException("No Employee with id: "+id);
+        } else {
+            throw new NoEmployeeException("No Employee with id: " + id);
         }
     }
 
     //update single employee by id
-    public Employee updateEmployeeById(Long id,Employee employee) throws NoEmployeeException {
-        Optional<Employee> emp=repo.findById(id);
+    public Employee updateEmployeeById(Long id, Employee employee) throws NoEmployeeException, AccessForbiddenException {
 
-        if(emp.isPresent()){
+//        // Ensure that users can only update their own data
+//        if (!securityService.hasPermissionToUpdateEmployee(id)) {
+//            throw new AccessForBiddenException("You can only update your own records");
+//        }
+
+        Optional<Employee> emp = repo.findById(id);
+
+        if (emp.isPresent()) {
             Employee existingEmployee = emp.get();
 
             existingEmployee.setName(employee.getName());
@@ -76,25 +82,25 @@ public class EmployeeService {
 
             repo.save(existingEmployee);
             return existingEmployee;
-        }else{
-            throw new NoEmployeeException("Not able to update employee data.  No Employee with id "+id+" found");
+        } else {
+            throw new NoEmployeeException("Not able to update employee data.  No Employee with id " + id + " found");
         }
     }
 
     //delete single employee by id
     public String deleteEmployeeById(Long id) throws NoEmployeeException {
-        Optional<Employee> emp=repo.findById(id);
-        if(emp.isPresent()){
+        Optional<Employee> emp = repo.findById(id);
+        if (emp.isPresent()) {
             repo.delete(emp.get());
 
             return "Employee deleted successfully";
-        }else{
-            throw new NoEmployeeException("Not able to delete employee data.  No Employee with id "+id+" found");
+        } else {
+            throw new NoEmployeeException("Not able to delete employee data.  No Employee with id " + id + " found");
         }
     }
 
     //search employees by name or department
     public List<Employee> searchEmployees(String query) {
-        return repo.findByNameContainingIgnoreCaseOrDepartmentContainingIgnoreCase(query,query);
+        return repo.findByNameContainingIgnoreCaseOrDepartmentContainingIgnoreCase(query, query);
     }
 }
