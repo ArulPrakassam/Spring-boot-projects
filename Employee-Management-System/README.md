@@ -8,6 +8,8 @@ The flow will be Controller-> Service-> Repo.
 
 ## API Endpoints
 
+- Register - POST /auth/register
+- Login - POST /auth/login
 - Create an Employee - POST /api/employees
 - Get Employee by ID - GET /api/employees/{id}
 - Update Employee - PUT /api/employees/{id}
@@ -16,6 +18,48 @@ The flow will be Controller-> Service-> Repo.
 - Search Employees by name or department - GET /api/employees/search?query={serachTerm}
 
 ## API Reference
+
+#### Register
+
+Register as an ADMIN or USER. ADMIN will have full access. USER will be able to access only GET routes.
+
+```http
+  POST /auth/register
+```
+
+Sample Request body
+
+```js
+{
+  "name": "David",
+  "email": "david@example.com",
+  "password": "david1",
+  "role": "ADMIN"
+}
+```
+
+#### Login
+
+```http
+  POST /auth/login
+```
+
+Sample Request body
+
+```js
+{
+  "email": "david@example.com",
+  "password": "david1"
+}
+```
+
+#### Authorization
+
+Except Register and Login routes, all other routes need JWT token in Authorization header to access.
+
+```js
+Bear ${token}
+```
 
 #### Create an Employee
 
@@ -145,6 +189,38 @@ Employee Data Model
 
 ```
 
+User Data model
+
+```js
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @NotBlank
+    private String name;
+
+    @NotBlank
+    @Email
+    private String email;
+
+    @NotBlank
+    private String password;
+
+    @NotBlank
+    private String role; // ROLE_USER or ROLE_ADMIN
+```
+
+LoginRequest
+
+```js
+    @NotBlank
+    @Email
+    private String email;
+
+    @NotBlank
+    private String password;
+```
+
 ResponseObject
 
 ```js
@@ -172,6 +248,76 @@ We are using JpaRepository.
 public interface EmployeeRepo extends JpaRepository<Employee,Long> {
     List<Employee> findByNameContainingIgnoreCaseOrDepartmentContainingIgnoreCase(String name,String department);
 }
+```
+
+```js
+@Repository
+public interface UserRepo extends JpaRepository<User, Long> {
+    Optional<User> findByEmail(String email);
+}
+```
+
+## Register
+
+Controller layer
+
+```js
+   @PostMapping("/register")
+    public ResponseEntity<ResponseObject<Object>> register(@Valid @RequestBody User registerUser)
+            throws UserAlreadyExistsException {
+        User user = authService.registerUser(registerUser);
+        ResponseObject<Object> response = new ResponseObject<>(true, 201, "User Created Successfully");
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+```
+
+Service layer
+
+```js
+    public User registerUser(User user) throws UserAlreadyExistsException {
+        if (userRepo.findByEmail(user.getEmail()).isPresent()) {
+            throw new UserAlreadyExistsException("User with this email already exists.");
+
+        }
+
+
+        user.setPassword(encoder.encode(user.getPassword())); // Encrypt password
+        user.setRole("ROLE_" + user.getRole());
+
+        return userRepo.save(user);
+    }
+```
+
+## Login
+
+Controller layer
+
+```js
+@PostMapping("/login")
+    public ResponseEntity<ResponseObject<Map<String, String>>> login(@Valid @RequestBody LoginRequest loginRequest) {
+        Map<String, String> token = authService.loginUser(loginRequest);
+        ResponseObject<Map<String, String>> response = new ResponseObject<>(true, 200, "Successful Request", token);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+```
+
+Service layer
+
+```js
+public Map<String, String> loginUser(LoginRequest loginRequest) {
+        Map<String, String> tokenValue = new HashMap<>();
+
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword())
+        );
+
+        // After successful authentication, generate the JWT token
+        String token = jwtService.generateToken(authentication.getName(), authentication.getAuthorities().toString());
+
+        tokenValue.put("token", token);
+        return tokenValue;
+    }
 ```
 
 ## Create an Employee
@@ -364,6 +510,298 @@ Service layer
     }
 ```
 
+## Security
+
+Using spring security and JWT token for authorization.
+
+### SecurityConfig.java
+
+```js
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+
+    @Autowired
+    private JwtFilter jwtFilter;
+
+    @Autowired
+    private UserDetailsService userDetailsService;
+
+    @Bean
+    public AuthenticationProvider authProvider() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(userDetailsService);
+        provider.setPasswordEncoder(passwordEncoder());
+        return provider;
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .csrf(customizer -> customizer.disable())
+                .authorizeHttpRequests(request -> request
+                        // public routes
+                        .requestMatchers("/", "/*.html", "/swagger.yaml", "/auth/register", "/auth/login",
+                                "/h2-console/**")
+                        .permitAll()
+                        // User can access GET, but not PUT, POST, DELETE
+                        .requestMatchers(HttpMethod.GET, "/api/employees/**").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers(HttpMethod.PUT, "/api/employees/{id}").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/employees/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/employees/{id}").hasRole("ADMIN")
+
+                        // Any other requests must be authenticated
+                        .anyRequest().authenticated())
+                // error response for access denied for user roles
+                .exceptionHandling(customizer -> customizer.accessDeniedHandler(
+                        (request, response, accessDeniedException) -> {
+                            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                            response.setContentType("application/json");
+
+                            String errorResponse = "{\"success\": false, \"status\": 403, \"message\": \"Access Denied.  Not able to perform operation.\"}";
+                            response.getWriter().write(errorResponse);
+
+                        }))
+
+                // for h2 console, enabling frames
+                .headers(headers -> headers
+                        .frameOptions(frameOptions -> frameOptions.sameOrigin()))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder(12);
+    }
+}
+```
+
+### JwtFilter.java
+
+```js
+@Component
+public class JwtFilter extends OncePerRequestFilter {
+
+    @Autowired
+    private JwtService jwtService;
+
+    @Autowired
+    ApplicationContext context;
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+
+
+        // Skip token validation for login and register routes
+        if (isPublicRoute(request)) {
+            filterChain.doFilter(request, response);  // Skip token validation
+            return;
+        }
+
+        String header = request.getHeader("Authorization");
+        String token = null;
+        String userName = null;
+
+        if (header != null && header.startsWith("Bearer ")) {
+            token = header.substring(7);
+
+        }
+
+        if (token == null) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);  // 401 Unauthorized
+            response.setContentType("application/json");
+            response.getWriter().write("{\"success\": false, \"status\": 401, \"message\": \"No authentication token specified in x-auth-token header\"}");
+            return;  // Return response and don't proceed further
+        }
+
+        try {
+            userName = jwtService.extractUsername(token);
+            if (userName != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = context.getBean(CustomUserDetailsService.class).loadUserByUsername(userName);
+
+                if (jwtService.validateToken(token, jwtService.extractUsername(token))) {
+                    UsernamePasswordAuthenticationToken authToken =
+                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                } else {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);  // 401 Unauthorized
+                    response.setContentType("application/json");
+                    response.getWriter().write("{\"success\": false, \"status\": 401, \"message\": \"Access token is not valid or has expired, you will need to login\"}");
+                    return;  // Return response and don't proceed further
+                }
+            }
+        } catch (MalformedJwtException | SignatureException | ExpiredJwtException e) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);  // 401 Unauthorized
+            response.setContentType("application/json");
+            response.getWriter().write("{\"success\": false, \"status\": 401, \"message\": \"Access token is not valid or has expired, you will need to login\"}");
+            return;  // Return response and don't proceed further
+        }
+
+        filterChain.doFilter(request, response);
+    }
+
+    private boolean isPublicRoute(HttpServletRequest request) {
+        // Skip token validation for specific public routes
+        String uri = request.getRequestURI();
+        return uri.equals("/") ||
+                uri.equals("/index.html") ||
+                uri.equals("/swagger.html") ||
+                uri.equals("/swagger.yaml") ||
+                uri.equals("/h2-console/") ||
+                uri.equals("/auth/login") ||
+                uri.equals("/auth/register");
+    }
+}
+```
+
+### JwtService.java
+
+```js
+@Service
+public class JwtService {
+
+    private static final long EXPIRATION_TIME = 86400000L; // 24 hours
+
+    private String secretKey;
+
+    public String generateSecretKey() {
+        try {
+            KeyGenerator keyGen = KeyGenerator.getInstance("HmacSHA256");
+            SecretKey secretKey = keyGen.generateKey();
+            return Base64.getEncoder().encodeToString(secretKey.getEncoded());
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("Error generating secret key", e);
+        }
+    }
+
+    public JwtService() {
+        secretKey = generateSecretKey();
+    }
+
+    public String generateToken(String username, String role) {
+        return Jwts.builder()
+                .setSubject(username)
+                .claim("role", role)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
+                .signWith(SignatureAlgorithm.HS256, secretKey)
+                .compact();
+    }
+
+    public Claims extractClaims(String token) {
+        return Jwts.parser()
+                .setSigningKey(secretKey)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+    }
+
+    public String extractUsername(String token) {
+        return extractClaims(token).getSubject();
+    }
+
+    public boolean isTokenExpired(String token) {
+        return extractClaims(token).getExpiration().before(new Date());
+    }
+
+    public boolean validateToken(String token, String username) {
+        return (username.equals(extractUsername(token)) && !isTokenExpired(token));
+    }
+}
+
+```
+
+### CustomUserDetailsService.java
+
+```js
+@Service
+public class CustomUserDetailsService implements UserDetailsService {
+
+    @Autowired
+    private UserRepo userRepo;
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+
+        User user = userRepo.findByEmail(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        return user;
+
+    }
+}
+
+```
+
+### User extends UserDetails
+
+```js
+public class User implements UserDetails {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @NotBlank
+    private String name;
+
+    @NotBlank
+    @Email
+    private String email;
+
+    @NotBlank
+    private String password;
+
+    @NotBlank
+    private String role; // ROLE_USER or ROLE_ADMIN
+
+    @Override
+    public String getUsername() {
+        return email;
+    }
+
+    @Override
+    public String getPassword() {
+        return password;
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(new SimpleGrantedAuthority(role));
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
+    }
+
+}
+```
+
 ## Exception Handling
 
 ### GlobalExceptionHandler
@@ -372,6 +810,7 @@ Service layer
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    // handle if employee data is not found
     @ExceptionHandler(NoEmployeeException.class)
     public ResponseEntity<ResponseObject<Object>> handleNoEmployeeException(NoEmployeeException e) {
 
@@ -380,37 +819,65 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ResponseObject<Object>> handleGeneralException(Exception e) {
+    // when trying to access restricted resource
+    @ExceptionHandler(AccessForbiddenException.class)
+    public ResponseEntity<ResponseObject<Object>> handleAccessForBiddenException(AccessForbiddenException e) {
 
-        ResponseObject<Object> response = new ResponseObject<>(false, HttpStatus.INTERNAL_SERVER_ERROR.value(),"An error occurred: Internal Server Error");
-
-
-        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        ResponseObject<Object> response = new ResponseObject<>(false, HttpStatus.FORBIDDEN.value(), e.getMessage());
+        return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
     }
 
     // Handle validation errors for @RequestBody
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ResponseObject<Object>> handleValidationExceptions(MethodArgumentNotValidException e) {
-        String errors = e.getBindingResult().getFieldErrors()
-                .stream()
-                .map(DefaultMessageSourceResolvable::getDefaultMessage)
-                .collect(Collectors.joining(", "));
+        // String errors = e.getBindingResult().getFieldErrors()
+        // .stream()
+        // .map(DefaultMessageSourceResolvable::getDefaultMessage)
+        // .collect(Collectors.joining(", "));
 
-        ResponseObject<Object> response = new ResponseObject<>(false, HttpStatus.BAD_REQUEST.value(), "Bad Request. "+errors);
+        ResponseObject<Object> response = new ResponseObject<>(false, HttpStatus.BAD_REQUEST.value(), "Bad Request");
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
     // Handle validation errors for @RequestParam, @PathVariable
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ResponseObject<Object>> handleConstraintViolationException(ConstraintViolationException e) {
-        String errors = e.getConstraintViolations()
-                .stream()
-                .map(ConstraintViolation::getMessage)
-                .collect(Collectors.joining(", "));
+        // String errors = e.getConstraintViolations()
+        // .stream()
+        // .map(ConstraintViolation::getMessage)
+        // .collect(Collectors.joining(", "));
 
-        ResponseObject<Object> response = new ResponseObject<>(false, HttpStatus.BAD_REQUEST.value(), "Bad Request. "+errors);
+        ResponseObject<Object> response = new ResponseObject<>(false, HttpStatus.BAD_REQUEST.value(), "Bad Request");
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    // handle if the registering user is already there
+    @ExceptionHandler(UserAlreadyExistsException.class)
+    public ResponseEntity<ResponseObject<Object>> handleInvalidInputException(UserAlreadyExistsException e) {
+
+        ResponseObject<Object> response = new ResponseObject<>(false, HttpStatus.BAD_REQUEST.value(),
+                "Bad Request. " + e.getMessage());
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+
+    }
+
+    // handle for bad credentials
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ResponseObject<Object>> handleBadCredentialsException(BadCredentialsException e) {
+
+        ResponseObject<Object> response = new ResponseObject<>(false, HttpStatus.UNAUTHORIZED.value(),
+                "Unauthorized Request. " + e.getMessage());
+        return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+
+    }
+
+    // all other exceptions
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ResponseObject<Object>> handleGeneralException(Exception e) {
+
+        ResponseObject<Object> response = new ResponseObject<>(false, HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                "An error occurred: Internal Server Error");
+        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
 }
@@ -427,8 +894,28 @@ public class NoEmployeeException extends Exception{
 }
 ```
 
+### UserAlreadyExistsException
+
+```js
+public class UserAlreadyExistsException extends Exception {
+    public UserAlreadyExistsException(String message) {
+        super(message);
+    }
+}
+```
+
+### AccessForbiddenException
+
+```js
+public class AccessForbiddenException extends Exception {
+    public AccessForbiddenException(String message) {
+        super(message);
+    }
+}
+```
+
 ## Tech Stack
 
 - Backend - Spring boot
 - Database - H2 In-memory Database
-- Hosting - Render
+- Hosting - Render, Docker
