@@ -2,6 +2,8 @@
 
 A Spring boot Rest API for managing employee records. We can do CRUD operations.
 
+The routes are protected by spring security and JWT token.
+
 The flow will be Controller-> Service-> Repo.
 
 [API Documentation](https://employee-records-management.onrender.com/)
