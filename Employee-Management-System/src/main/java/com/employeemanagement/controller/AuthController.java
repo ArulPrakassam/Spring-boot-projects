@@ -12,9 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.Map;
-
 
 @Validated
 @RestController
@@ -27,7 +25,8 @@ public class AuthController {
 
     // Register
     @PostMapping("/register")
-    public ResponseEntity<ResponseObject<Object>> register(@Valid @RequestBody User registerUser) throws UserAlreadyExistsException {
+    public ResponseEntity<ResponseObject<Object>> register(@Valid @RequestBody User registerUser)
+            throws UserAlreadyExistsException {
         User user = authService.registerUser(registerUser);
         ResponseObject<Object> response = new ResponseObject<>(true, 201, "User Created Successfully");
         return new ResponseEntity<>(response, HttpStatus.CREATED);
@@ -42,5 +41,4 @@ public class AuthController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
- 
 }

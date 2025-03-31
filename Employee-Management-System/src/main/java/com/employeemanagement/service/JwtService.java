@@ -1,8 +1,7 @@
 package com.employeemanagement.service;
 
-
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
+
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.stereotype.Service;
@@ -20,7 +19,6 @@ public class JwtService {
 
     private String secretKey;
 
-
     public String generateSecretKey() {
         try {
             KeyGenerator keyGen = KeyGenerator.getInstance("HmacSHA256");
@@ -30,7 +28,8 @@ public class JwtService {
             throw new RuntimeException("Error generating secret key", e);
         }
     }
-    public JwtService(){
+
+    public JwtService() {
         secretKey = generateSecretKey();
     }
 
@@ -40,7 +39,7 @@ public class JwtService {
                 .claim("role", role)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
-                .signWith(SignatureAlgorithm.HS256,secretKey )
+                .signWith(SignatureAlgorithm.HS256, secretKey)
                 .compact();
     }
 
