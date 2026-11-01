@@ -620,7 +620,7 @@ paths:
                 message: Successful Request
                 data:
                   token: >-
-                    eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJqYWRlQGV4YW1wbGUuY29tIiwicm9sZSI6IltST0xFX1VTRVJdIiwiaWF0IjoxNzQzNDI1NDg0LCJleHAiOjE3NDM1MTE4ODR9.d0GeaUSv79DTW23iF1w5NXP4jX31XkZak9mkWUWeKXE
+                    eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJqYWRlQGV4YkjahfkhdfksdakjfasdltST0xFX1VTRVJdIiwiaWF0IjoxNzQzNDI1NDg0LCJleHAiOjE3NDM1MTE4ODR9.d0GeaUlkadjfldsjflsdafkjadfdsEs
         "400":
           description: Bad Request
           content:
